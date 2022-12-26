@@ -1,56 +1,59 @@
 FROM lscr.io/linuxserver/code-server:latest
 
+SHELL ["/bin/bash", "-c"]
 # Install specified docker mods directly.
 RUN \
   DOCKER_MODS='linuxserver/mods:universal-package-install|\
-  linuxserver/mods:universal-docker|\
-  linuxserver/mods:code-server-shellcheck|\
-  linuxserver/mods:code-server-golang|\
-  linuxserver/mods:code-server-python3|\
-  linuxserver/mods:code-server-flutter|\
-  linuxserver/mods:code-server-nvm|\
-  linuxserver/mods:code-server-npmglobal|\
-  linuxserver/mods:code-server-nodejs|\
-  linuxserver/mods:code-server-java11|\
-  linuxserver/mods:code-server-php8\
-  linuxserver/mods:code-server-extension-arguments\
-  ' bash /docker-mods ; \
-  mkdir -p /config/.config && \
-  sudo chown -R abc:abc /config
-USER abc
-
-SHELL ["/bin/bash", "-c"]
-RUN \
-  EXTENSIONS_GALLERY='{"serviceUrl": "https://extensions.coder.com/api"}' && \
-  _VSCODE_EXTENSION_IDS=( \
-  'eamodio.gitlens' \
-  'Shan.code-settings-sync' \
-  'ms-azuretools.vscode-docker' \
-  'bierner.github-markdown-preview' \
-  'dracula-theme.theme-dracula' \
-  'thejustinwalsh.textproto-grammer' \
-  'zhangciwu.swig-tpl' \
-  'BazelBuild.vscode-bazel' \
-  'xaver.clang-format' \
-  'Dart-Code.dart-code' \
-  'Dart-Code.flutter' \
-  'ms-vscode.makefile-tools' \
-  'brunnerh.insert-unicode' \
-  'donjayamanne.githistory' \
-  'golang.Go' \
-  'DavidAnson.vscode-markdownlint' \
-  'esbenp.prettier-vscode' \
-  'ms-python.python' \
-  'zxh404.vscode-proto3' \
-  'njpwerner.autodocstring' \
-  ) && \
-  _INSTALL_EXTENSION="$(which install-extension)" && \
-  # Use newly available abstraction if available (>= v4.0.x), else fallback to old method.
-  if [ -x "${_INSTALL_EXTENSION}" ]; then \
-  for ID in "${_VSCODE_EXTENSION_IDS[@]}"; do \
-  bash ${_INSTALL_EXTENSION} ${ID} ;\
-  done ; \
-  fi
-
-USER root
-RUN ls -al /config
+  linuxserver/mods:code-server-extension-arguments|\
+  ' bash /docker-mods && \
+  apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+  gnupg curl wget apt-transport-https ca-certificates build-essential lsb-core \
+  gcc g++ make cmake software-properties-common && \
+  mkdir -p /etc/apt/keyrings && chmod -R 0755 /etc/apt/keyrings && \
+  LC_ALL=C.UTF-8 add-apt-repository --yes ppa:ondrej/php && \
+  curl -fsSL "https://download.docker.com/linux/ubuntu/gpg" | gpg --dearmor --yes -o /etc/apt/keyrings/docker.gpg && \
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list && \
+  curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | sudo tee /etc/apt/keyrings/yarnkey.gpg >/dev/null && \
+  echo "deb [signed-by=/etc/apt/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | sudo tee /etc/apt/sources.list.d/yarn.list >/dev/null && \
+  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash && \
+  curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash - && \
+  apt-get update && \
+  echo "Installing nvm" && \
+  export NVM_DIR="${HOME}/.nvm" && \
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" && \
+  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" && \
+  nvm install --lts && \
+  nvm install node && \
+  npm install -g npm@latest && \
+  npm install -g @bazel/bazelisk && \
+  DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y && \
+  DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+  python3 python3-pip python3-dev python3-setuptools python3-wheel \
+  golang-go \
+  git \
+  unzip \
+  shellcheck \
+  openjdk-11-jdk \
+  iptables \
+  openssh-client \
+  php8.0 \
+  nodejs yarn \
+  docker-ce docker-ce-cli containerd.io docker-compose-plugin && \
+  go install -v golang.org/x/tools/gopls@latest && \
+  go install mvdan.cc/gofumpt@latest && \
+  echo "Installing sshuttle" && \
+  pip3 install sshuttle && \
+  echo "Installing flutter" && \
+  git clone https://github.com/flutter/flutter.git -b beta --depth 1 /flutter && \
+  ln -s /flutter/bin/flutter /usr/bin/flutter && \
+  flutter doctor && \
+  flutter config --enable-web && \
+  flutter config --no-analytics && \
+  flutter precache && \
+  apt-get clean && \
+  rm -rf \
+  /tmp/* \
+  /var/lib/apt/lists/* \
+  /var/tmp/* \
+  /flutter/.git
