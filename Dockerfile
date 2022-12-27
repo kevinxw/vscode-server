@@ -5,6 +5,7 @@ SHELL ["/bin/bash", "-c"]
 RUN \
   DOCKER_MODS='linuxserver/mods:universal-package-install|\
   linuxserver/mods:code-server-extension-arguments|\
+  linuxserver/mods:universal-docker\
   ' bash /docker-mods && \
   apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
@@ -40,7 +41,7 @@ RUN \
   openssh-client \
   php8.0 \
   nodejs yarn \
-  docker-ce docker-ce-cli containerd.io docker-compose-plugin && \
+  && \
   go install golang.org/x/tools/gopls@latest && \
   go install mvdan.cc/gofumpt@latest && \
   go install github.com/bazelbuild/buildtools/buildifier@latest && \
@@ -62,3 +63,6 @@ RUN \
   /var/lib/apt/lists/* \
   /var/tmp/* \
   /flutter/.git
+
+# Docker related packages are installed via docker mods.
+# docker-ce docker-ce-cli containerd.io docker-compose-plugin
