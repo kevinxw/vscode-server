@@ -46,6 +46,8 @@ RUN \
   go install mvdan.cc/gofumpt@latest && \
   go install github.com/bazelbuild/buildtools/buildifier@latest && \
   go install github.com/bazelbuild/buildtools/buildozer@latest && \
+  go install github.com/go-delve/delve/cmd/dlv@latest && \
+  go install honnef.co/go/tools/cmd/staticcheck@latest && \
   echo "Installing sshuttle" && \
   pip3 install sshuttle && \
   echo "Installing flutter" && \
