@@ -9,7 +9,8 @@ RUN \
   apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
   gnupg curl wget apt-transport-https ca-certificates build-essential lsb-core \
-  gcc g++ make cmake software-properties-common && \
+  gcc g++ make cmake software-properties-common \
+  clang ninja-build pkg-config libgtk-3-dev liblzma-dev && \
   mkdir -p /etc/apt/keyrings && chmod -R 0755 /etc/apt/keyrings && \
   LC_ALL=C.UTF-8 add-apt-repository --yes ppa:ondrej/php && \
   curl -fsSL "https://download.docker.com/linux/ubuntu/gpg" | gpg --dearmor --yes -o /etc/apt/keyrings/docker.gpg && \
@@ -40,13 +41,17 @@ RUN \
   php8.0 \
   nodejs yarn \
   docker-ce docker-ce-cli containerd.io docker-compose-plugin && \
-  go install -v golang.org/x/tools/gopls@latest && \
+  go install golang.org/x/tools/gopls@latest && \
   go install mvdan.cc/gofumpt@latest && \
+  go install github.com/bazelbuild/buildtools/buildifier@latest && \
+  go install github.com/bazelbuild/buildtools/buildozer@latest && \
   echo "Installing sshuttle" && \
   pip3 install sshuttle && \
   echo "Installing flutter" && \
-  git clone https://github.com/flutter/flutter.git -b beta --depth 1 /flutter && \
+  git clone https://github.com/flutter/flutter.git -b stable --depth 1 /flutter && \
   ln -s /flutter/bin/flutter /usr/bin/flutter && \
+  flutter channel stable && \
+  flutter upgrade && \
   flutter doctor && \
   flutter config --enable-web && \
   flutter config --no-analytics && \
