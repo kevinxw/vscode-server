@@ -63,8 +63,7 @@ RUN \
   rm -rf \
   /tmp/* \
   /var/lib/apt/lists/* \
-  /var/tmp/* \
-  /flutter/.git
+  /var/tmp/*
 
 # Docker related packages are installed via docker mods.
 # docker-ce docker-ce-cli containerd.io docker-compose-plugin
